@@ -156,7 +156,6 @@ interface InvoiceData {
   createdAt: string;
 }
 
-const tabs = ['dashboard', 'transactions', 'invoices', 'countries', 'converter'];
 const tabs = ['dashboard', 'transactions', 'invoices', 'countries', 'converter', 'gemini-ai'];
 
 function App() {
@@ -2111,7 +2110,6 @@ function App() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* Mobile Tab Navigation with Icons Below Labels */}
           <div className="block sm:hidden mb-6">
-            <div className="grid grid-cols-3 gap-2 px-4">
             <div className="grid grid-cols-3 gap-2 px-4 auto-rows-fr">
               {[
                 { key: 'dashboard', label: 'Dashboard', icon: ChartBar },
@@ -2147,7 +2145,6 @@ function App() {
 
           {/* Desktop Tab Navigation */}
           <div className="hidden sm:block w-full overflow-x-auto scrollbar-none mb-6">
-            <TabsList className="grid w-max min-w-full grid-cols-5 gap-1 sm:w-full sm:min-w-0 h-14">
             <TabsList className="grid w-max min-w-full grid-cols-6 gap-1 sm:w-full sm:min-w-0 h-14">
               <TabsTrigger value="dashboard" className="px-4 py-3 whitespace-nowrap transition-fast text-base font-medium">
                 <ChartBar className="h-5 w-5 mr-3" weight="duotone" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.2))' }} />
