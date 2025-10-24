@@ -26,6 +26,7 @@ import FinancialCarousel from "@/components/FinancialCarousel";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProfileSettings from "@/components/ProfileSettings";
 
+import GeminiAIChat from "@/GeminiAIChat";
 import TransactionPreviewModal from "@/components/TransactionPreviewModal";
 
 // Removed MobileIntegration - Pure PWA App
@@ -3322,20 +3323,7 @@ function App() {
 
           {/* Gemini AI Tab */}
           <TabsContent value="gemini-ai" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkle className="h-6 w-6 text-primary" weight="duotone" />
-                  Gemini AI Assistant
-                </CardTitle>
-                <CardDescription>
-                  Your intelligent assistant for financial insights and operations.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Gemini AI content will be displayed here.</p>
-              </CardContent>
-            </Card>
+            <GeminiAIChat />
           </TabsContent>
 
           {/* Profile demo removed */}
