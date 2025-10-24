@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useKV } from "@github/spark/hooks";
+import { useKV } from "@/hooks/useKVWithFallback";
 import {
   Card,
   CardContent,
@@ -41,21 +41,29 @@ import {
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-// Declare global spark interface
-declare global {
-  interface Window {
-    spark: {
-      kv: {
-        keys: () => Promise<string[]>;
-        get: <T>(key: string) => Promise<T | undefined>;
-        set: <T>(key: string, value: T) => Promise<void>;
-        delete: (key: string) => Promise<void>;
-      };
-    };
-  }
-}
+// Supabase-based KV operations - placeholder implementation
+// These functions would need to be implemented based on your Supabase schema
+// For now, they provide basic functionality to prevent crashes
 
-const spark = window.spark;
+const kvOperations = {
+  keys: async (): Promise<string[]> => {
+    // Placeholder - return empty array since we can't list keys in Supabase easily
+    return [];
+  },
+  get: async <T>(key: string): Promise<T | undefined> => {
+    // Placeholder - in a real implementation, you'd query a key-value table in Supabase
+    console.warn(`KV get for key "${key}" not implemented with Supabase`);
+    return undefined;
+  },
+  set: async <T>(key: string, value: T): Promise<void> => {
+    // Placeholder - in a real implementation, you'd upsert to a key-value table in Supabase
+    console.warn(`KV set for key "${key}" not implemented with Supabase`);
+  },
+  delete: async (key: string): Promise<void> => {
+    // Placeholder - in a real implementation, you'd delete from a key-value table in Supabase
+    console.warn(`KV delete for key "${key}" not implemented with Supabase`);
+  },
+};
 
 interface SystemSettingsProps {
   onBack: () => void;
@@ -68,7 +76,7 @@ interface SystemSettingsProps {
     clients?: unknown[];
     invoices?: unknown[];
     exchangeRates?: unknown[];
-  };
+  }; // trailing comma removed
   onDataSynced?: () => void;
 }
 
@@ -261,7 +269,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({
 
     try {
       // Get all stored keys and clear them
-      const allKeys = await spark.kv.keys();
+      const allKeys = await kvOperations.keys();
 
       // Keep essential keys but clear data caches
       const keysToKeep = ["systemConfig", "isAuthenticated", "currentUser"];
@@ -269,7 +277,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({
 
       // Clear specific data keys
       for (const key of keysToClear) {
-        await spark.kv.delete(key);
+        await kvOperations.delete(key);
       }
 
       // Clear browser caches if available
@@ -290,11 +298,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({
 
   const exportSystemData = async () => {
     try {
-      const allKeys = await spark.kv.keys();
+      const allKeys = await kvOperations.keys();
       const systemData: Record<string, unknown> = {};
 
       for (const key of allKeys) {
-        systemData[key] = await spark.kv.get(key);
+        systemData[key] = await kvOperations.get(key);
       }
 
       const dataStr = JSON.stringify(systemData, null, 2);

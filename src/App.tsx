@@ -66,6 +66,7 @@ import {
   SortAscending,
   SortDescending,
   CaretDown,
+  Sparkle,
   Calculator,
   X
 } from "@phosphor-icons/react";
@@ -156,6 +157,7 @@ interface InvoiceData {
 }
 
 const tabs = ['dashboard', 'transactions', 'invoices', 'countries', 'converter'];
+const tabs = ['dashboard', 'transactions', 'invoices', 'countries', 'converter', 'gemini-ai'];
 
 function App() {
 
@@ -294,6 +296,120 @@ function App() {
 
   // Mobile tab navigation
   const [currentTabIndex, setCurrentTabIndex] = useState(0);
+
+  const refreshData = useCallback(async () => {
+    setIsRefreshing(true);
+
+    try {
+      // Fetch real-time exchange rates from API
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await response.json();
+
+      if (data && data.rates) {
+        // Convert API response to our ExchangeRate format
+        const updatedRates: ExchangeRate[] = Object.entries(data.rates).map(([currency, rateValue]) => {
+          // Map currencies to regions for better organization
+          const regionMap: { [key: string]: ExchangeRate['region'] } = {
+            // North America
+            'USD': 'north-america', 'CAD': 'north-america', 'MXN': 'north-america',
+            'GTQ': 'north-america', 'HNL': 'north-america', 'NIO': 'north-america',
+            'CRC': 'north-america', 'PAB': 'north-america', 'DOP': 'north-america',
+            'JMD': 'north-america', 'BBD': 'north-america', 'BZD': 'north-america',
+            'BMD': 'north-america', 'KYD': 'north-america', 'AWG': 'north-america',
+
+            // Europe
+            'EUR': 'europe', 'GBP': 'europe', 'CHF': 'europe', 'SEK': 'europe',
+            'NOK': 'europe', 'DKK': 'europe', 'PLN': 'europe', 'CZK': 'europe',
+            'HUF': 'europe', 'RON': 'europe', 'BGN': 'europe', 'HRK': 'europe',
+            'RSD': 'europe', 'RUB': 'europe', 'UAH': 'europe', 'TRY': 'europe',
+            'ALL': 'europe', 'AMD': 'europe', 'AZN': 'europe', 'BAM': 'europe',
+            'BYN': 'europe', 'ISK': 'europe', 'MDL': 'europe', 'MKD': 'europe',
+            'GEL': 'europe',
+
+            // Asia
+            'JPY': 'asia', 'CNY': 'asia', 'KRW': 'asia', 'SGD': 'asia',
+            'MYR': 'asia', 'THB': 'asia', 'VND': 'asia', 'IDR': 'asia',
+            'PKR': 'asia', 'LKR': 'asia', 'BDT': 'asia', 'NPR': 'asia',
+            'MMK': 'asia', 'KHR': 'asia', 'LAK': 'asia', 'MNT': 'asia',
+            'AFN': 'asia', 'UZS': 'asia', 'KZT': 'asia', 'KGS': 'asia',
+            'TJS': 'asia', 'TMT': 'asia', 'BND': 'asia', 'MVR': 'asia',
+            'BTN': 'asia', 'INR': 'asia', 'PHP': 'asia',
+
+            // Africa
+            'GHS': 'africa', 'NGN': 'africa', 'KES': 'africa', 'ZAR': 'africa',
+            'EGP': 'africa', 'MAD': 'africa', 'TND': 'africa', 'ETB': 'africa',
+            'UGX': 'africa', 'TZS': 'africa', 'RWF': 'africa', 'XOF': 'africa',
+            'BWP': 'africa', 'NAD': 'africa', 'ZMW': 'africa', 'AOA': 'africa',
+            'DZD': 'africa', 'LYD': 'africa', 'SDG': 'africa', 'SOS': 'africa',
+            'DJF': 'africa', 'ERN': 'africa', 'MZN': 'africa', 'MWK': 'africa',
+            'SZL': 'africa', 'LSL': 'africa', 'MGA': 'africa', 'MUR': 'africa',
+            'SCR': 'africa', 'GMD': 'africa', 'GNF': 'africa', 'SLE': 'africa',
+            'LRD': 'africa',
+
+            // South America
+            'BRL': 'south-america', 'ARS': 'south-america', 'CLP': 'south-america',
+            'COP': 'south-america', 'PEN': 'south-america', 'UYU': 'south-america',
+            'VES': 'south-america', 'BOB': 'south-america', 'PYG': 'south-america',
+
+            // Oceania
+            'AUD': 'oceania', 'NZD': 'oceania', 'FJD': 'oceania',
+
+            // Middle East
+            'AED': 'middle-east', 'SAR': 'middle-east', 'QAR': 'middle-east',
+            'KWD': 'middle-east', 'BHD': 'middle-east', 'OMR': 'middle-east',
+            'JOD': 'middle-east', 'LBP': 'middle-east', 'ILS': 'middle-east',
+            'IRR': 'middle-east', 'IQD': 'middle-east', 'SYP': 'middle-east',
+            'YER': 'middle-east'
+          };
+
+          const region = regionMap[currency] || 'other';
+
+          // Calculate change and changePercent (using previous rate if available)
+          const previousRate = (exchangeRates || []).find(r => r.pair === `USD/${currency}`)?.rate || (rateValue as number);
+          const change = (rateValue as number) - previousRate;
+          const changePercent = previousRate !== 0 ? (change / previousRate) * 100 : 0;
+
+          return {
+            pair: `USD/${currency}`,
+            rate: rateValue as number,
+            change,
+            changePercent,
+            lastUpdated: new Date().toISOString(),
+            region: region as ExchangeRate['region']
+          };
+        });
+
+        // Sort to put North America first, then other regions
+        updatedRates.sort((a, b) => {
+          if (a.region === 'north-america' && b.region !== 'north-america') return -1;
+          if (a.region !== 'north-america' && b.region === 'north-america') return 1;
+          return a.pair.localeCompare(b.pair);
+        });
+
+        setExchangeRates(updatedRates);
+        toast.success("Exchange rates updated with live data");
+      } else {
+        throw new Error('Invalid API response');
+      }
+    } catch {
+
+      // Fallback to simulated refresh if API fails
+      setExchangeRates((prev) => (prev || []).map(rate => {
+        if (!rate) return rate;
+        return {
+          ...rate,
+          rate: (rate.rate || 1) + (Math.random() - 0.5) * 0.1,
+          change: (Math.random() - 0.5) * 2,
+          changePercent: (Math.random() - 0.5) * 3,
+          lastUpdated: new Date().toISOString()
+        };
+      }));
+
+      toast.error("Using cached rates - API unavailable");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [exchangeRates]);
 
   const handleAnalyticsClick = (type: 'revenue' | 'volume' | 'growth' | 'average' | 'clients' | 'conversion', title: string) => {
     setAnalyticsType(type);
@@ -724,119 +840,6 @@ function App() {
     }
   }, [printerStatus?.connected, setIsLoading]);
 
-  const refreshData = useCallback(async () => {
-    setIsRefreshing(true);
-
-    try {
-      // Fetch real-time exchange rates from API
-      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      const data = await response.json();
-
-      if (data && data.rates) {
-        // Convert API response to our ExchangeRate format
-        const updatedRates: ExchangeRate[] = Object.entries(data.rates).map(([currency, rateValue]) => {
-          // Map currencies to regions for better organization
-          const regionMap: { [key: string]: ExchangeRate['region'] } = {
-            // North America
-            'USD': 'north-america', 'CAD': 'north-america', 'MXN': 'north-america',
-            'GTQ': 'north-america', 'HNL': 'north-america', 'NIO': 'north-america',
-            'CRC': 'north-america', 'PAB': 'north-america', 'DOP': 'north-america',
-            'JMD': 'north-america', 'BBD': 'north-america', 'BZD': 'north-america',
-            'BMD': 'north-america', 'KYD': 'north-america', 'AWG': 'north-america',
-
-            // Europe
-            'EUR': 'europe', 'GBP': 'europe', 'CHF': 'europe', 'SEK': 'europe',
-            'NOK': 'europe', 'DKK': 'europe', 'PLN': 'europe', 'CZK': 'europe',
-            'HUF': 'europe', 'RON': 'europe', 'BGN': 'europe', 'HRK': 'europe',
-            'RSD': 'europe', 'RUB': 'europe', 'UAH': 'europe', 'TRY': 'europe',
-            'ALL': 'europe', 'AMD': 'europe', 'AZN': 'europe', 'BAM': 'europe',
-            'BYN': 'europe', 'ISK': 'europe', 'MDL': 'europe', 'MKD': 'europe',
-            'GEL': 'europe',
-
-            // Asia
-            'JPY': 'asia', 'CNY': 'asia', 'KRW': 'asia', 'SGD': 'asia',
-            'MYR': 'asia', 'THB': 'asia', 'VND': 'asia', 'IDR': 'asia',
-            'PKR': 'asia', 'LKR': 'asia', 'BDT': 'asia', 'NPR': 'asia',
-            'MMK': 'asia', 'KHR': 'asia', 'LAK': 'asia', 'MNT': 'asia',
-            'AFN': 'asia', 'UZS': 'asia', 'KZT': 'asia', 'KGS': 'asia',
-            'TJS': 'asia', 'TMT': 'asia', 'BND': 'asia', 'MVR': 'asia',
-            'BTN': 'asia', 'INR': 'asia', 'PHP': 'asia',
-
-            // Africa
-            'GHS': 'africa', 'NGN': 'africa', 'KES': 'africa', 'ZAR': 'africa',
-            'EGP': 'africa', 'MAD': 'africa', 'TND': 'africa', 'ETB': 'africa',
-            'UGX': 'africa', 'TZS': 'africa', 'RWF': 'africa', 'XOF': 'africa',
-            'BWP': 'africa', 'NAD': 'africa', 'ZMW': 'africa', 'AOA': 'africa',
-            'DZD': 'africa', 'LYD': 'africa', 'SDG': 'africa', 'SOS': 'africa',
-            'DJF': 'africa', 'ERN': 'africa', 'MZN': 'africa', 'MWK': 'africa',
-            'SZL': 'africa', 'LSL': 'africa', 'MGA': 'africa', 'MUR': 'africa',
-            'SCR': 'africa', 'GMD': 'africa', 'GNF': 'africa', 'SLE': 'africa',
-            'LRD': 'africa',
-
-            // South America
-            'BRL': 'south-america', 'ARS': 'south-america', 'CLP': 'south-america',
-            'COP': 'south-america', 'PEN': 'south-america', 'UYU': 'south-america',
-            'VES': 'south-america', 'BOB': 'south-america', 'PYG': 'south-america',
-
-            // Oceania
-            'AUD': 'oceania', 'NZD': 'oceania', 'FJD': 'oceania',
-
-            // Middle East
-            'AED': 'middle-east', 'SAR': 'middle-east', 'QAR': 'middle-east',
-            'KWD': 'middle-east', 'BHD': 'middle-east', 'OMR': 'middle-east',
-            'JOD': 'middle-east', 'LBP': 'middle-east', 'ILS': 'middle-east',
-            'IRR': 'middle-east', 'IQD': 'middle-east', 'SYP': 'middle-east',
-            'YER': 'middle-east'
-          };
-
-          const region = regionMap[currency] || 'other';
-
-          // Calculate change and changePercent (using previous rate if available)
-          const previousRate = (exchangeRates || []).find(r => r.pair === `USD/${currency}`)?.rate || (rateValue as number);
-          const change = (rateValue as number) - previousRate;
-          const changePercent = previousRate !== 0 ? (change / previousRate) * 100 : 0;
-
-          return {
-            pair: `USD/${currency}`,
-            rate: rateValue as number,
-            change,
-            changePercent,
-            lastUpdated: new Date().toISOString(),
-            region: region as ExchangeRate['region']
-          };
-        });
-
-        // Sort to put North America first, then other regions
-        updatedRates.sort((a, b) => {
-          if (a.region === 'north-america' && b.region !== 'north-america') return -1;
-          if (a.region !== 'north-america' && b.region === 'north-america') return 1;
-          return a.pair.localeCompare(b.pair);
-        });
-
-        setExchangeRates(updatedRates);
-        toast.success("Exchange rates updated with live data");
-      } else {
-        throw new Error('Invalid API response');
-      }
-    } catch {
-
-      // Fallback to simulated refresh if API fails
-      setExchangeRates((prev) => (prev || []).map(rate => {
-        if (!rate) return rate;
-        return {
-          ...rate,
-          rate: (rate.rate || 1) + (Math.random() - 0.5) * 0.1,
-          change: (Math.random() - 0.5) * 2,
-          changePercent: (Math.random() - 0.5) * 3,
-          lastUpdated: new Date().toISOString()
-        };
-      }));
-
-      toast.error("Using cached rates - API unavailable");
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [exchangeRates]);
 
   const exportData = useCallback(async (type: 'transactions' | 'clients' | 'invoices' | 'countries') => {
     let data: unknown[];
@@ -2109,6 +2112,7 @@ function App() {
           {/* Mobile Tab Navigation with Icons Below Labels */}
           <div className="block sm:hidden mb-6">
             <div className="grid grid-cols-3 gap-2 px-4">
+            <div className="grid grid-cols-3 gap-2 px-4 auto-rows-fr">
               {[
                 { key: 'dashboard', label: 'Dashboard', icon: ChartBar },
                 { key: 'transactions', label: 'Transactions', icon: CreditCard },
@@ -2128,12 +2132,23 @@ function App() {
                   <span className="text-xs font-medium font-montserrat">{label}</span>
                 </button>
               ))}
+              <button
+                onClick={() => setActiveTab('gemini-ai')}
+                className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-all duration-300 ${activeTab === 'gemini-ai'
+                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:scale-102'
+                  }`}
+              >
+                <Sparkle className="h-6 w-6" weight="duotone" />
+                <span className="text-xs font-medium font-montserrat">Gemini AI</span>
+              </button>
             </div>
           </div>
 
           {/* Desktop Tab Navigation */}
           <div className="hidden sm:block w-full overflow-x-auto scrollbar-none mb-6">
             <TabsList className="grid w-max min-w-full grid-cols-5 gap-1 sm:w-full sm:min-w-0 h-14">
+            <TabsList className="grid w-max min-w-full grid-cols-6 gap-1 sm:w-full sm:min-w-0 h-14">
               <TabsTrigger value="dashboard" className="px-4 py-3 whitespace-nowrap transition-fast text-base font-medium">
                 <ChartBar className="h-5 w-5 mr-3" weight="duotone" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.2))' }} />
                 Dashboard
@@ -2153,6 +2168,10 @@ function App() {
               <TabsTrigger value="converter" className="px-4 py-3 whitespace-nowrap transition-fast text-base font-medium">
                 <Calculator className="h-5 w-5 mr-3" weight="duotone" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.2))' }} />
                 Converter
+              </TabsTrigger>
+              <TabsTrigger value="gemini-ai" className="px-4 py-3 whitespace-nowrap transition-fast text-base font-medium">
+                <Sparkle className="h-5 w-5 mr-3" weight="duotone" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.2))' }} />
+                Gemini AI
               </TabsTrigger>
               {/* Removed profile-demo demo tab to reduce demo/sample cruft */}
             </TabsList>
@@ -2182,6 +2201,7 @@ function App() {
                     onClick={() => handleAnalyticsClick('revenue', 'Total Revenue')}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#182B3A] to-[#20A4F3] opacity-30 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-900/70 to-sky-500/70 opacity-40 rounded-lg"></div>
                     <CardHeader className="flex flex-row items-center justify-between p-0 pb-3 relative z-10">
                       <CardTitle className="text-sm font-medium text-muted-foreground font-dynamic-sm">Total Revenue</CardTitle>
                       <CurrencyDollar className="h-4 w-4 text-[#20A4F3]" weight="duotone" />
@@ -2201,6 +2221,7 @@ function App() {
                     onClick={() => handleAnalyticsClick('volume', 'Transaction Volume')}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#43e97b] to-[#38f9d7] opacity-30 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-400/70 to-teal-400/70 opacity-40 rounded-lg"></div>
                     <CardHeader className="flex flex-row items-center justify-between p-0 pb-3 relative z-10">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Daily Transaction Volume</CardTitle>
                       <Money className="h-4 w-4 text-[#43e97b]" weight="duotone" />
@@ -2229,6 +2250,7 @@ function App() {
                     onClick={() => handleAnalyticsClick('growth', 'Revenue Growth')}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#f093fb] to-[#f5576c] opacity-30 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-400/70 to-red-400/70 opacity-40 rounded-lg"></div>
                     <CardHeader className="flex flex-row items-center justify-between p-0 pb-3 relative z-10">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Revenue Growth</CardTitle>
                       <TrendUp className="h-4 w-4 text-[#f5576c]" weight="duotone" />
@@ -2245,6 +2267,7 @@ function App() {
                     onClick={() => handleAnalyticsClick('average', 'Average Transaction')}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] opacity-30 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400/70 to-cyan-400/70 opacity-40 rounded-lg"></div>
                     <CardHeader className="flex flex-row items-center justify-between p-0 pb-3 relative z-10">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Avg Transaction</CardTitle>
                       <CurrencyDollar className="h-4 w-4 text-[#00f2fe]" weight="duotone" />
@@ -3298,6 +3321,24 @@ function App() {
               favoriteRates={favoriteRates || []}
               onToggleFavorite={toggleFavoriteRate}
             />
+          </TabsContent>
+
+          {/* Gemini AI Tab */}
+          <TabsContent value="gemini-ai" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkle className="h-6 w-6 text-primary" weight="duotone" />
+                  Gemini AI Assistant
+                </CardTitle>
+                <CardDescription>
+                  Your intelligent assistant for financial insights and operations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Gemini AI content will be displayed here.</p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Profile demo removed */}

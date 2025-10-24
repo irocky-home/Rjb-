@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCircle, AlertTriangle, XCircle, Settings } from 'lucide-react';
 import { toast } from 'sonner';
-import { useKV } from '@github/spark/hooks';
+import { useKV } from '@/hooks/useKVWithFallback';
 
 interface Transaction {
   id: string;
