@@ -26,9 +26,6 @@
     <meta name="msapplication-TileColor" content="#20A4F3" />
     <meta name="msapplication-TileImage" content="https://i.ibb.co/6LY7bxR/rjb-logo.jpg" />
     
-    <!-- PWA Manifest (conditionally loaded) -->
-    <link id="manifest-link" rel="manifest" href="./manifest.json" />
-    
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="https://i.ibb.co/6LY7bxR/rjb-logo.jpg" />
     <link rel="shortcut icon" type="image/jpeg" href="https://i.ibb.co/6LY7bxR/rjb-logo.jpg" />
@@ -62,16 +59,14 @@
                            window.location.hostname.includes('glitch.com') ||
                            window.location.hostname.endsWith('.github.dev');
 
-        // Remove manifest link in GitHub Codespaces to avoid CORS issues
-        if (isGitHubDev) {
-            const manifestLink = document.getElementById('manifest-link');
-            if (manifestLink) {
-                manifestLink.remove();
-            }
-        }
-
-        // Register Service Worker for PWA functionality only in production, not in GitHub Codespaces, and not in file:// (Electron)
-        if (!isDev && !isGitHubDev && window.location.protocol !== 'file:' && 'serviceWorker' in navigator) {
+        // Dynamically add manifest only if not in a problematic dev environment
+        if (!isGitHubDev) {
+            const manifestLink = document.createElement('link');
+            manifestLink.id = 'manifest-link';
+            manifestLink.rel = 'manifest';
+            manifestLink.href = './manifest.json';
+            document.head.appendChild(manifestLink);
+            
             window.addEventListener('load', async () => {
                 try {
                     const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
@@ -102,7 +97,7 @@
                     console.error('SW registration failed:', error);
                 }
             });
-        } else if (isDev || isGitHubDev) {
+        } else {
             console.log('SW registration skipped in development/GitHub Codespaces environment');
 
             // In development (incl. Codespaces), actively unregister any existing SW IMMEDIATELY

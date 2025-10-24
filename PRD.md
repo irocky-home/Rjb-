@@ -33,7 +33,6 @@ A comprehensive admin-side Customer Relationship Management system for RJB TRANZ
 - **Functionality**: Customer database with contact info, transaction history, verification status, and visit tracking
 - **Purpose**: Maintain comprehensive customer relationships and compliance records
 - **Trigger**: Add new client, search existing client, or track client visit
-- **Progression**: Client search → Profile view → Edit details → View transaction history → Add visit notes → Save changes
 - **Success criteria**: Client lookup in <300ms, complete audit trail, export capabilities
 
 ### ESC/POS Printer Integration
@@ -67,6 +66,15 @@ A comprehensive admin-side Customer Relationship Management system for RJB TRANZ
 
 ## Design Direction
 The interface should evoke trust, efficiency, and professional competence - feeling like enterprise financial software used by banks and investment firms, with a clean minimalist approach that prioritizes information density without overwhelming complexity.
+
+### Dark Theme: Glassmorphism
+- **Concept**: To enhance the professional, modern feel in dark mode, cards will adopt a glassmorphism style. This creates a "frosted glass" effect, where UI elements appear to float on a blurred background, adding depth and focus.
+- **Default Card State**: Cards will have a semi-transparent background with a background blur and a subtle white border to lift them off the page.
+  - `background-color: rgba(30, 41, 59, 0.5);` (A semi-transparent slate gray)
+  - `backdrop-filter: blur(12px);`
+  - `border: 1px solid rgba(255, 255, 255, 0.1);`
+- **Active Card State**: When a card is active or hovered, it will feature a subtle white radial gradient from the top-left to indicate its state, enhancing the glass effect.
+  - `background-image: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent);`
 
 ## Color Selection
 Complementary (opposite colors) - Professional blue primary with warm orange accents to create visual interest while maintaining corporate credibility and ensuring critical alerts stand out effectively.

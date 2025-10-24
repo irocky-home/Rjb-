@@ -64,30 +64,10 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
   const [isCalculating, setIsCalculating] = useState(false);
 
   // Get available currencies from exchange rates
-  const availableCurrencies = React.useMemo(() => {
-    const currencies = new Set<string>();
-    currencies.add('USD'); // Base currency
-    
-    exchangeRates.forEach(rate => {
-      const [base, target] = rate.pair.split('/');
-      currencies.add(base);
-      currencies.add(target);
-    });
-    
-    return Array.from(currencies).sort();
-  }, [exchangeRates]);
+  const availableCurrencies = React.useMemo(() => COUNTRY_DATA.map(c => c.currency).filter((value, index, self) => self.indexOf(value) === index).sort(), []);
 
-  // Get country flag for currency
-  const getCurrencyFlag = (currency: string) => {
-    const flagMap: { [key: string]: string } = {
-      'USD': '🇺🇸', 'EUR': '🇪🇺', 'GBP': '🇬🇧', 'JPY': '🇯🇵',
-      'GHS': '🇬🇭', 'NGN': '🇳🇬', 'KES': '🇰🇪', 'ZAR': '🇿🇦',
-      'INR': '🇮🇳', 'PHP': '🇵🇭', 'CNY': '🇨🇳', 'CAD': '🇨🇦',
-      'AUD': '🇦🇺', 'CHF': '🇨🇭', 'BRL': '🇧🇷', 'MXN': '🇲🇽',
-      'AED': '🇦🇪', 'SAR': '🇸🇦', 'EGP': '🇪🇬', 'MAD': '🇲🇦'
-    };
-    return flagMap[currency] || '🌍';
-  };
+  const getCurrencyFlag = (currency: string) => getCurrencyInfoByCode(currency)?.flag || '🌍';
+  const getCurrencySymbolLocal = (currency: string) => getCurrencyInfoByCode(currency)?.symbol || currency;
 
   // Find exchange rate between two currencies
   const findExchangeRate = (from: string, to: string): ExchangeRate | null => {
@@ -299,7 +279,7 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
                   onChange={(e) => setFromCurrency(e.target.value)}
                   className="w-full px-4 py-3 border rounded-lg text-lg font-semibold bg-background appearance-none cursor-pointer hover:border-primary transition-fast"
                 >
-                  {availableCurrencies.map((currency) => (
+                  {availableCurrencies.map((currency) => ( // Use availableCurrencies from COUNTRY_DATA
                     <option key={currency} value={currency}>
                       {getCurrencyFlag(currency)} {currency}
                     </option>
@@ -329,7 +309,7 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
                   onChange={(e) => setToCurrency(e.target.value)}
                   className="w-full px-4 py-3 border rounded-lg text-lg font-semibold bg-background appearance-none cursor-pointer hover:border-primary transition-fast"
                 >
-                  {availableCurrencies.map((currency) => (
+                  {availableCurrencies.map((currency) => ( // Use availableCurrencies from COUNTRY_DATA
                     <option key={currency} value={currency}>
                       {getCurrencyFlag(currency)} {currency}
                     </option>
@@ -345,7 +325,7 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
               <div className="text-center space-y-2">
                 <div className="text-3xl font-bold text-primary">
                   {getCurrencyFlag(result.toCurrency)} {result.toAmount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
+                    minimumFractionDigits: 2, // Use getCurrencySymbolLocal here
                     maximumFractionDigits: 6
                   })} {result.toCurrency}
                 </div>
@@ -361,13 +341,13 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Exchange Rate:</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold">1 {getCurrencySymbolLocal(result.fromCurrency)}{result.fromCurrency} = {result.rate.toFixed(6)} {getCurrencySymbolLocal(result.toCurrency)}{result.toCurrency}
                       1 {result.fromCurrency} = {result.rate.toFixed(6)} {result.toCurrency}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Inverse Rate:</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold">1 {getCurrencySymbolLocal(result.toCurrency)}{result.toCurrency} = {result.inverseRate.toFixed(6)} {getCurrencySymbolLocal(result.fromCurrency)}{result.fromCurrency}
                       1 {result.toCurrency} = {result.inverseRate.toFixed(6)} {result.fromCurrency}
                     </span>
                   </div>
@@ -460,11 +440,11 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
                   onClick={() => {
                     setFromCurrency(conversion.fromCurrency);
                     setToCurrency(conversion.toCurrency);
-                    setAmount(conversion.fromAmount.toString());
+                    setAmount(conversion.fromAmount.toString()); // Use getCurrencySymbolLocal here
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-sm">
+                    <div className="text-sm">{getCurrencySymbolLocal(conversion.fromCurrency)}
                       {getCurrencyFlag(conversion.fromCurrency)} {conversion.fromAmount.toLocaleString()} {conversion.fromCurrency}
                     </div>
                     <div className="text-muted-foreground">→</div>

@@ -76,7 +76,7 @@ interface SystemSettingsProps {
     clients?: unknown[];
     invoices?: unknown[];
     exchangeRates?: unknown[];
-  }; // trailing comma removed
+  };
   onDataSynced?: () => void;
 }
 

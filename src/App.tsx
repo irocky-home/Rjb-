@@ -278,7 +278,7 @@ function App() {
   const [baseCurrency, setBaseCurrency] = useState("USD");
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [rateSortOrder, setRateSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [favoriteRates, setFavoriteRates] = useKV<string[]>("favoriteRates", []);
+  const [favoriteRates, setFavoriteRates] = useKV<string[]>("favoriteRates", ['USD/USD']);
   const [autoRefreshRates] = useState(true);
 
   // Analytics modal state
@@ -1474,6 +1474,10 @@ function App() {
     // Apply sorting - put North America first, then sort alphabetically
     filtered.sort((a, b) => {
       if (!a || !b) return 0;
+
+      // Pin USD to the top
+      if (a.pair === 'USD/USD') return -1;
+      if (b.pair === 'USD/USD') return 1;
 
       // Always put North America first
       if (a.region === 'north-america' && b.region !== 'north-america') return -1;

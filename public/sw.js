@@ -27,15 +27,8 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       if (isDevEnvironment) {
-        console.log("Service Worker: Development environment, minimal caching");
-        // In development, only cache essential static assets
-        const devUrlsToCache = urlsToCache.filter(
-          (url) =>
-            !url.includes("/src/") &&
-            !url.includes(".tsx") &&
-            !url.includes(".ts")
-        );
-        return cache.addAll(devUrlsToCache);
+        console.log("Service Worker: Development environment, skipping all caching during install.");
+        return Promise.resolve(); // Do not cache anything during install in dev
       } else {
         return cache.addAll(urlsToCache);
       }
@@ -63,25 +56,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // In development, be less aggressive with caching to avoid CORS issues
   if (isDevEnvironment) {
-    // Only cache specific static assets in development, not dynamic requests
-    const url = new URL(event.request.url);
-
-    // Skip caching for Vite development server requests
-    if (
-      url.pathname.startsWith("/@") ||
-      url.pathname.startsWith("/src/") ||
-      url.pathname.includes("?html-proxy") ||
-      url.pathname.endsWith(".tsx") ||
-      url.pathname.endsWith(".ts") ||
-      url.hostname.includes("github.dev") ||
-      url.hostname.includes("localhost")
-    ) {
-      console.log(
-        "Service Worker: Skipping cache for development request:",
-        event.request.url
-      );
-      return; // Don't intercept these requests
-    }
+    // Always go to network in development, never serve from cache
+    console.log("Service Worker: Development environment, fetching directly from network:", event.request.url);
+    return event.respondWith(fetch(event.request));
   }
 
   event.respondWith(

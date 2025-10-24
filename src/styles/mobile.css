@@ -35,13 +35,13 @@
 }
 /* Country modal mobile scaling and layout tweaks */
 @media (max-width: 640px) {
-  /* Reduce general components in country modal by 15% */
+  /* Reduce general components in country modal by % */
   .country-modal-scale {
     transform: scale(0.85);
     transform-origin: top center;
   }
 
-  /* Reduce only Send/Receive buttons by 5% */
+  /* Reduce only Send/Receive buttons by % */
   .country-modal-actions-scale {
     transform: scale(0.95);
     transform-origin: top center;

@@ -1,6 +1,7 @@
  @import 'tailwindcss';
 @import "tw-animate-css";
 @import "./styles/mobile.css";
+@import "./styles/glassmorphism.css";
 
 @layer base {
   * {
@@ -75,6 +76,13 @@
   --border: oklch(92.5% 0.084 155.995);
   --input: oklch(0.16 0.008 240);
   --ring: oklch(0.65 0.18 250);
+
+  /* Apply glassmorphism to cards in dark mode */
+  --card-background-color: rgba(255, 255, 255, 0.2);
+  --card-backdrop-filter: blur(12px);
+  --card-border-color: rgba(255, 255, 255, 0.3);
+  --card-active-background-image: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent);
+  --card-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 @theme {
@@ -200,6 +208,16 @@ input, select, textarea {
   border: 1px solid var(--border);
 }
 
+/* Apply glassmorphism to cards in dark mode by default */
+.dark .gradient-card-1, .dark .gradient-card-2, .dark .gradient-card-3, .dark .gradient-card-4,
+.dark .gradient-card-5, .dark .gradient-card-6, .dark .gradient-card-7, .dark .gradient-card-8,
+.dark .gradient-card-9, .dark .gradient-card-10, .dark .gradient-card-11, .dark .gradient-card-12 {
+  background-color: var(--card-background-color);
+  backdrop-filter: var(--card-backdrop-filter);
+  border-color: var(--card-border-color);
+  box-shadow: var(--card-box-shadow);
+}
+
 /* Gradient Card Hover Effects - +5px lift with floating shadows, 140% deeper gradients (70% increase) */
 .gradient-card-1:hover, .gradient-card-2:hover, .gradient-card-3:hover, .gradient-card-4:hover,
 .gradient-card-5:hover, .gradient-card-6:hover, .gradient-card-7:hover, .gradient-card-8:hover,
@@ -285,6 +303,13 @@ input, select, textarea {
     0 12px 24px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.1);
 }
+
+/* Apply active glassmorphism gradient on hover for dark mode cards */
+.dark .card-hover-enhanced:hover {
+  background-color: var(--card-background-color);
+  background-image: var(--card-active-background-image);
+}
+
 
 /* Minimal Card Hover */
 .card-hover-minimal {
@@ -529,6 +554,12 @@ input, select, textarea {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Apply active glassmorphism gradient on hover for dark mode cards */
+.dark .card-hover:hover {
+  background-color: var(--card-background-color);
+  background-image: var(--card-active-background-image);
+}
+
 /* Dark mode card backgrounds */
 .dark .bg-card {
   background: oklch(0.12 0.008 240);
@@ -575,6 +606,12 @@ input, select, textarea {
 .dark .gradient-card-8 {
   background: oklch(0.12 0.008 240);
   border: 1px solid oklch(0.2 0.01 240);
+}
+
+/* Apply active glassmorphism gradient on hover for dark mode cards */
+.dark .gradient-card-1:hover, .dark .gradient-card-2:hover, .dark .gradient-card-3:hover, .dark .gradient-card-4:hover,
+.dark .gradient-card-5:hover, .dark .gradient-card-6:hover, .dark .gradient-card-7:hover, .dark .gradient-card-8:hover {
+  background-image: var(--card-active-background-image) !important;
 }
 
 /* Dark mode enhanced card hover effects */
@@ -2702,6 +2739,13 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+.pinned {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000; /* ensures it stays above other elements */
+}
+
 .carousel-progress {
   animation: carousel-progress 5s linear infinite;
 }
@@ -3075,6 +3119,12 @@ input:focus, select:focus, textarea:focus {
     0 0 0 1px rgba(255, 255, 255, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Apply active glassmorphism gradient on hover for dark mode cards */
+.dark .card-hover-glass:hover {
+  background-color: var(--card-background-color);
+  background-image: var(--card-active-background-image);
 }
 
 .card-hover-glass:active {

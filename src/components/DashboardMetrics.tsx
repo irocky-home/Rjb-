@@ -119,7 +119,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
               <CurrencyDollar className="h-4 w-4 text-[#20A4F3]" weight="duotone" />
             </CardHeader>
             <CardContent className="p-0 relative z-10">
-              <div className="text-2xl font-bold font-dynamic-2xl">${safeToLocaleString(totalRevenue)}</div>
+              <div className="text-2xl font-bold font-dynamic-2xl">$ {safeToLocaleString(totalRevenue)}</div>
               <p className="text-xs text-muted-foreground flex items-center mt-1 font-dynamic-xs">
                 <TrendUp className="h-3 w-3 mr-1 text-green-600" weight="bold" />
                 +20.1% from last month
@@ -138,7 +138,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
               <Money className="h-4 w-4 text-[#43e97b]" weight="duotone" />
             </CardHeader>
             <CardContent className="p-0 relative z-10">
-              <div className="text-2xl font-bold mb-2">
+              <div className="text-2xl font-bold mb-2">$
                 ${safeToLocaleString(totalVolume)}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
@@ -182,7 +182,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
               <CurrencyDollar className="h-4 w-4 text-[#00f2fe]" weight="duotone" />
             </CardHeader>
             <CardContent className="p-0 relative z-10">
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold">$
                 ${safeToLocaleString(transactions && transactions.length > 0 ? Math.round(totalVolume / transactions.length) : 0)}
               </div>
               <p className="text-xs text-muted-foreground">per transaction</p>

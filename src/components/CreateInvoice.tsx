@@ -39,18 +39,102 @@ const PAYMENT_METHODS = [
 ];
 
 // Countries data with phone codes
-const COUNTRIES = [
-  { code: 'GH', name: 'Ghana', currency: 'GHS', phoneCode: '+233', flag: '🇬🇭' },
-  { code: 'NG', name: 'Nigeria', currency: 'NGN', phoneCode: '+234', flag: '🇳🇬' },
-  { code: 'KE', name: 'Kenya', currency: 'KES', phoneCode: '+254', flag: '🇰🇪' },
-  { code: 'PH', name: 'Philippines', currency: 'PHP', phoneCode: '+63', flag: '🇵🇭' },
-  { code: 'IN', name: 'India', currency: 'INR', phoneCode: '+91', flag: '🇮🇳' },
-  { code: 'US', name: 'United States', currency: 'USD', phoneCode: '+1', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', currency: 'GBP', phoneCode: '+44', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada', currency: 'CAD', phoneCode: '+1', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', currency: 'AUD', phoneCode: '+61', flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany', currency: 'EUR', phoneCode: '+49', flag: '🇩🇪' },
+const COUNTRY_DATA = [
+  { code: 'GH', name: 'Ghana', currency: 'GHS', phoneCode: '+233', flag: '🇬🇭', symbol: '₵' },
+  { code: 'NG', name: 'Nigeria', currency: 'NGN', phoneCode: '+234', flag: '🇳🇬', symbol: '₦' },
+  { code: 'KE', name: 'Kenya', currency: 'KES', phoneCode: '+254', flag: '🇰🇪', symbol: 'KSh' },
+  { code: 'PH', name: 'Philippines', currency: 'PHP', phoneCode: '+63', flag: '🇵🇭', symbol: '₱' },
+  { code: 'IN', name: 'India', currency: 'INR', phoneCode: '+91', flag: '🇮🇳', symbol: '₹' },
+  { code: 'US', name: 'United States', currency: 'USD', phoneCode: '+1', flag: '🇺🇸', symbol: '$' },
+  { code: 'GB', name: 'United Kingdom', currency: 'GBP', phoneCode: '+44', flag: '🇬🇧', symbol: '£' },
+  { code: 'CA', name: 'Canada', currency: 'CAD', phoneCode: '+1', flag: '🇨🇦', symbol: 'C$' },
+  { code: 'AU', name: 'Australia', currency: 'AUD', phoneCode: '+61', flag: '🇦🇺', symbol: 'A$' },
+  { code: 'DE', name: 'Germany', currency: 'EUR', phoneCode: '+49', flag: '🇩🇪', symbol: '€' },
+  { code: 'JP', name: 'Japan', currency: 'JPY', phoneCode: '+81', flag: '🇯🇵', symbol: '¥' },
+  { code: 'CH', name: 'Switzerland', currency: 'CHF', phoneCode: '+41', flag: '🇨🇭', symbol: 'CHF' },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', phoneCode: '+27', flag: '🇿🇦', symbol: 'R' },
+  { code: 'AE', name: 'United Arab Emirates', currency: 'AED', phoneCode: '+971', flag: '🇦🇪', symbol: 'د.إ' },
+  { code: 'SA', name: 'Saudi Arabia', currency: 'SAR', phoneCode: '+966', flag: '🇸🇦', symbol: '﷼' },
+  { code: 'EG', name: 'Egypt', currency: 'EGP', phoneCode: '+20', flag: '🇪🇬', symbol: 'E£' },
+  { code: 'MX', name: 'Mexico', currency: 'MXN', phoneCode: '+52', flag: '🇲🇽', symbol: 'Mex$' },
+  { code: 'BR', name: 'Brazil', currency: 'BRL', phoneCode: '+55', flag: '🇧🇷', symbol: 'R$' },
+  { code: 'CN', name: 'China', currency: 'CNY', phoneCode: '+86', flag: '🇨🇳', symbol: '¥' },
+  { code: 'SE', name: 'Sweden', currency: 'SEK', phoneCode: '+46', flag: '🇸🇪', symbol: 'kr' },
+  { code: 'NO', name: 'Norway', currency: 'NOK', phoneCode: '+47', flag: '🇳🇴', symbol: 'kr' },
+  { code: 'DK', name: 'Denmark', currency: 'DKK', phoneCode: '+45', flag: '🇩🇰', symbol: 'kr' },
+  { code: 'SG', name: 'Singapore', currency: 'SGD', phoneCode: '+65', flag: '🇸🇬', symbol: 'S$' },
+  { code: 'HK', name: 'Hong Kong', currency: 'HKD', phoneCode: '+852', flag: '🇭🇰', symbol: 'HK$' },
+  { code: 'NZ', name: 'New Zealand', currency: 'NZD', phoneCode: '+64', flag: '🇳🇿', symbol: 'NZ$' },
+  { code: 'TH', name: 'Thailand', currency: 'THB', phoneCode: '+66', flag: '🇹🇭', symbol: '฿' },
+  { code: 'MY', name: 'Malaysia', currency: 'MYR', phoneCode: '+60', flag: '🇲🇾', symbol: 'RM' },
+  { code: 'ID', name: 'Indonesia', currency: 'IDR', phoneCode: '+62', flag: '🇮🇩', symbol: 'Rp' },
+  { code: 'PK', name: 'Pakistan', currency: 'PKR', phoneCode: '+92', flag: '🇵🇰', symbol: '₨' },
+  { code: 'BD', name: 'Bangladesh', currency: 'BDT', phoneCode: '+880', flag: '🇧🇩', symbol: '৳' },
+  { code: 'LK', name: 'Sri Lanka', currency: 'LKR', phoneCode: '+94', flag: '🇱🇰', symbol: 'Rs' },
+  { code: 'NP', name: 'Nepal', currency: 'NPR', phoneCode: '+977', flag: '🇳🇵', symbol: '₨' },
+  { code: 'VN', name: 'Vietnam', currency: 'VND', phoneCode: '+84', flag: '🇻🇳', symbol: '₫' },
+  { code: 'TR', name: 'Turkey', currency: 'TRY', phoneCode: '+90', flag: '🇹🇷', symbol: '₺' },
+  { code: 'RU', name: 'Russia', currency: 'RUB', phoneCode: '+7', flag: '🇷🇺', symbol: '₽' },
+  { code: 'PL', name: 'Poland', currency: 'PLN', phoneCode: '+48', flag: '🇵🇱', symbol: 'zł' },
+  { code: 'CZ', name: 'Czech Republic', currency: 'CZK', phoneCode: '+420', flag: '🇨🇿', symbol: 'Kč' },
+  { code: 'HU', name: 'Hungary', currency: 'HUF', phoneCode: '+36', flag: '🇭🇺', symbol: 'Ft' },
+  { code: 'RO', name: 'Romania', currency: 'RON', phoneCode: '+40', flag: '🇷🇴', symbol: 'lei' },
+  { code: 'BG', name: 'Bulgaria', currency: 'BGN', phoneCode: '+359', flag: '🇧🇬', symbol: 'лв' },
+  { code: 'HR', name: 'Croatia', currency: 'HRK', phoneCode: '+385', flag: '🇭🇷', symbol: 'kn' },
+  { code: 'RS', name: 'Serbia', currency: 'RSD', phoneCode: '+381', flag: '🇷🇸', symbol: 'дин' },
+  { code: 'UA', name: 'Ukraine', currency: 'UAH', phoneCode: '+380', flag: '🇺🇦', symbol: '₴' },
+  { code: 'KZ', name: 'Kazakhstan', currency: 'KZT', phoneCode: '+7', flag: '🇰🇿', symbol: '₸' },
+  { code: 'UZ', name: 'Uzbekistan', currency: 'UZS', phoneCode: '+998', flag: '🇺🇿', symbol: 'сум' },
+  { code: 'AZ', name: 'Azerbaijan', currency: 'AZN', phoneCode: '+994', flag: '🇦🇿', symbol: '₼' },
+  { code: 'GE', name: 'Georgia', currency: 'GEL', phoneCode: '+995', flag: '🇬🇪', symbol: '₾' },
+  { code: 'AM', name: 'Armenia', currency: 'AMD', phoneCode: '+374', flag: '🇦🇲', symbol: '֏' },
+  { code: 'KG', name: 'Kyrgyzstan', currency: 'KGS', phoneCode: '+996', flag: '🇰🇬', symbol: 'с' },
+  { code: 'TJ', name: 'Tajikistan', currency: 'TJS', phoneCode: '+992', flag: '🇹🇯', symbol: 'ЅМ' },
+  { code: 'TM', name: 'Turkmenistan', currency: 'TMT', phoneCode: '+993', flag: '🇹🇲', symbol: 'm' },
+  { code: 'BY', name: 'Belarus', currency: 'BYN', phoneCode: '+375', flag: '🇧🇾', symbol: 'Br' },
+  { code: 'MD', name: 'Moldova', currency: 'MDL', phoneCode: '+373', flag: '🇲🇩', symbol: 'L' },
+  { code: 'AL', name: 'Albania', currency: 'ALL', phoneCode: '+355', flag: '🇦🇱', symbol: 'L' },
+  { code: 'BA', name: 'Bosnia and Herzegovina', currency: 'BAM', phoneCode: '+387', flag: '🇧🇦', symbol: 'KM' },
+  { code: 'MK', name: 'North Macedonia', currency: 'MKD', phoneCode: '+389', flag: '🇲🇰', symbol: 'ден' },
+  { code: 'ME', name: 'Montenegro', currency: 'EUR', phoneCode: '+382', flag: '🇲🇪', symbol: '€' },
+  { code: 'XK', name: 'Kosovo', currency: 'EUR', phoneCode: '+383', flag: '🇽🇰', symbol: '€' },
+  { code: 'IS', name: 'Iceland', currency: 'ISK', phoneCode: '+354', flag: '🇮🇸', symbol: 'kr' },
+  { code: 'IE', name: 'Ireland', currency: 'EUR', phoneCode: '+353', flag: '🇮🇪', symbol: '€' },
+  { code: 'PT', name: 'Portugal', currency: 'EUR', phoneCode: '+351', flag: '🇵🇹', symbol: '€' },
+  { code: 'ES', name: 'Spain', currency: 'EUR', phoneCode: '+34', flag: '🇪🇸', symbol: '€' },
+  { code: 'FR', name: 'France', currency: 'EUR', phoneCode: '+33', flag: '🇫🇷', symbol: '€' },
+  { code: 'IT', name: 'Italy', currency: 'EUR', phoneCode: '+39', flag: '🇮🇹', symbol: '€' },
+  { code: 'BE', name: 'Belgium', currency: 'EUR', phoneCode: '+32', flag: '🇧🇪', symbol: '€' },
+  { code: 'NL', name: 'Netherlands', currency: 'EUR', phoneCode: '+31', flag: '🇳🇱', symbol: '€' },
+  { code: 'LU', name: 'Luxembourg', currency: 'EUR', phoneCode: '+352', flag: '🇱🇺', symbol: '€' },
+  { code: 'AT', name: 'Austria', currency: 'EUR', phoneCode: '+43', flag: '🇦🇹', symbol: '€' },
+  { code: 'GR', name: 'Greece', currency: 'EUR', phoneCode: '+30', flag: '🇬🇷', symbol: '€' },
+  { code: 'CY', name: 'Cyprus', currency: 'EUR', phoneCode: '+357', flag: '🇨🇾', symbol: '€' },
+  { code: 'MT', name: 'Malta', currency: 'EUR', phoneCode: '+356', flag: '🇲🇹', symbol: '€' },
+  { code: 'FI', name: 'Finland', currency: 'EUR', phoneCode: '+358', flag: '🇫🇮', symbol: '€' },
+  { code: 'EE', name: 'Estonia', currency: 'EUR', phoneCode: '+372', flag: '🇪🇪', symbol: '€' },
+  { code: 'LV', name: 'Latvia', currency: 'EUR', phoneCode: '+371', flag: '🇱🇻', symbol: '€' },
+  { code: 'LT', name: 'Lithuania', currency: 'EUR', phoneCode: '+370', flag: '🇱🇹', symbol: '€' },
+  { code: 'SK', name: 'Slovakia', currency: 'EUR', phoneCode: '+421', flag: '🇸🇰', symbol: '€' },
+  { code: 'SI', name: 'Slovenia', currency: 'EUR', phoneCode: '+386', flag: '🇸🇮', symbol: '€' },
+  { code: 'AD', name: 'Andorra', currency: 'EUR', phoneCode: '+376', flag: '🇦🇩', symbol: '€' },
+  { code: 'SM', name: 'San Marino', currency: 'EUR', phoneCode: '+378', flag: '🇸🇲', symbol: '€' },
+  { code: 'VA', name: 'Vatican City', currency: 'EUR', phoneCode: '+379', flag: '🇻🇦', symbol: '€' },
+  { code: 'MC', name: 'Monaco', currency: 'EUR', phoneCode: '+377', flag: '🇲🇨', symbol: '€' },
+  { code: 'LI', name: 'Liechtenstein', currency: 'CHF', phoneCode: '+423', flag: '🇱🇮', symbol: 'CHF' },
+  { code: 'GI', name: 'Gibraltar', currency: 'GBP', phoneCode: '+350', flag: '🇬🇮', symbol: '£' },
+  { code: 'IM', name: 'Isle of Man', currency: 'GBP', phoneCode: '+44', flag: '🇮🇲', symbol: '£' },
+  { code: 'JE', name: 'Jersey', currency: 'GBP', phoneCode: '+44', flag: '🇯🇪', symbol: '£' },
+  { code: 'GG', name: 'Guernsey', currency: 'GBP', phoneCode: '+44', flag: '🇬🇬', symbol: '£' },
 ];
+
+const getCurrencyInfoByCode = (currencyCode: string) => {
+  return COUNTRY_DATA.find(c => c.currency === currencyCode);
+};
+
+const getCurrencySymbol = (currencyCode: string) => {
+  return getCurrencyInfoByCode(currencyCode)?.symbol || currencyCode;
+};
 
 // Exchange rates (in real app, this would come from API)
 const EXCHANGE_RATES = {
@@ -86,7 +170,7 @@ interface InvoiceData {
   
   // Fee Settings
   feeAmount: number;
-  feeRate: number; // 5% default
+  feeRate: number; // % default
   feeCurrency: string;
   feeOnSender: boolean;
   exchangeRate: number;
@@ -138,7 +222,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
     receiverPhone: '',
     receiverPaymentMethod: 'mtn_momo',
     feeAmount: 0,
-    feeRate: 5.0, // 5% default
+    feeRate: 0.0, // 5% default
     feeCurrency: 'USD',
     feeOnSender: true,
     exchangeRate: selectedCountry?.rate?.rate || 12.45,
@@ -159,7 +243,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate exchange rate and amounts with 5% fee auto-deduction
+  // Calculate exchange rate and amounts with 0% fee auto-deduction
   useEffect(() => {
     const fromCurrency = invoiceData.senderCurrency;
     const toCurrency = invoiceData.receiverCurrency;
@@ -169,17 +253,19 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
     const rate = EXCHANGE_RATES[rateKey] || (1 / (EXCHANGE_RATES[reverseRateKey] || 1));
     
     // Apply 5% fee to the exchange rate (auto-deduct)
-    const adjustedRate = rate * (1 - invoiceData.feeRate / 100);
+    const feeRateDecimal = invoiceData.feeRate / 100;
+    const adjustedRate = rate; // We will deduct fee from amount, not adjust rate directly
     
     // Calculate receiver amount and fee based on sender amount
     if (invoiceData.senderAmount) {
       const senderAmt = parseFloat(invoiceData.senderAmount);
-      const receiverAmt = senderAmt * adjustedRate;
-      const feeAmt = senderAmt * (invoiceData.feeRate / 100);
+      const feeAmt = senderAmt * feeRateDecimal;
+      const amountToConvert = senderAmt - feeAmt;
+      const receiverAmt = amountToConvert * adjustedRate;
       
       setInvoiceData(prev => ({
         ...prev,
-        exchangeRate: adjustedRate,
+        exchangeRate: rate, // Store the original rate
         receiverAmount: receiverAmt.toFixed(2),
         feeAmount: feeAmt,
         totalFee: feeAmt
@@ -383,9 +469,9 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       onChange={(e) => updateField('senderCurrency', e.target.value)}
                       className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white"
                     >
-                      {COUNTRIES.map(country => (
+                      {COUNTRY_DATA.map(country => (
                         <option key={country.currency} value={country.currency}>
-                          {country.flag} {country.currency}
+                          {country.flag} {country.currency} ({country.symbol})
                         </option>
                       ))}
                     </select>
@@ -402,9 +488,9 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       onChange={(e) => updateField('senderCountry', e.target.value)}
                       className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white"
                     >
-                      {COUNTRIES.map(country => (
+                      {COUNTRY_DATA.map(country => (
                         <option key={country.code} value={country.code}>
-                          {country.flag} {country.name}
+                          {country.flag} {country.name} ({getCurrencySymbol(country.currency)})
                         </option>
                       ))}
                     </select>
@@ -414,7 +500,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       Phone Number *
                     </label>
                     <div className="relative">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 flex items-center gap-1">
                         {getCountryByCode(invoiceData.senderCountry).phoneCode}
                       </div>
                       <Input
@@ -550,9 +636,9 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       onChange={(e) => updateField('receiverCurrency', e.target.value)}
                       className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white"
                     >
-                      {COUNTRIES.map(country => (
+                      {COUNTRY_DATA.map(country => (
                         <option key={country.currency} value={country.currency}>
-                          {country.flag} {country.currency}
+                          {country.flag} {country.currency} ({country.symbol})
                         </option>
                       ))}
                     </select>
@@ -569,9 +655,9 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       onChange={(e) => updateField('receiverCountry', e.target.value)}
                       className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white"
                     >
-                      {COUNTRIES.map(country => (
+                      {COUNTRY_DATA.map(country => (
                         <option key={country.code} value={country.code}>
-                          {country.flag} {country.name}
+                          {country.flag} {country.name} ({getCurrencySymbol(country.currency)})
                         </option>
                       ))}
                     </select>
@@ -581,7 +667,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       Phone Number *
                     </label>
                     <div className="relative">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 flex items-center gap-1">
                         {getCountryByCode(invoiceData.receiverCountry).phoneCode}
                       </div>
                       <Input
@@ -701,8 +787,8 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       )}
                       {invoiceData.receiverCurrency}
                     </div>
-                    <div className="text-sm text-red-600 font-medium">
-                      Rate includes 5% fee deduction
+                    <div className="text-sm text-red-600 font-medium flex items-center gap-1">
+                      Rate includes % fee deduction
                     </div>
                     <div className="text-sm text-gray-600">
                       Updated: {new Date().toLocaleTimeString()}
@@ -716,7 +802,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Transaction Fee (Auto-deducted at 5%)
+                    Transaction Fee (Auto-deducted at %)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -754,10 +840,9 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                         onChange={(e) => updateField('feeCurrency', e.target.value)}
                         className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white"
                       >
-                        <option value={invoiceData.senderCurrency}>
-                          {invoiceData.senderCurrency} (Sender)
+                        <option value={invoiceData.senderCurrency}> {getCurrencySymbol(invoiceData.senderCurrency)} {invoiceData.senderCurrency} (Sender)
                         </option>
-                        <option value={invoiceData.receiverCurrency}>
+                        <option value={invoiceData.receiverCurrency}> {getCurrencySymbol(invoiceData.receiverCurrency)}
                           {invoiceData.receiverCurrency} (Receiver)
                         </option>
                       </select>
@@ -812,12 +897,12 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Sender Amount:</span>
-                      <span className="font-semibold">{invoiceData.senderAmount} {invoiceData.senderCurrency}</span>
+                      <span className="font-semibold">{getCurrencySymbol(invoiceData.senderCurrency)}{invoiceData.senderAmount} {invoiceData.senderCurrency}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Exchange Rate (with fee):</span>
-                      <span className="font-mono text-sm">{invoiceData.exchangeRate.toFixed(4)}</span>
-                    </div>
+                      <span className="font-mono text-sm">1 {invoiceData.senderCurrency} = {invoiceData.exchangeRate.toFixed(4)} {invoiceData.receiverCurrency}</span>
+                    </div> 
                     <div className="flex justify-between">
                       <span>Receiver Amount:</span>
                       <span className="font-semibold">{invoiceData.receiverAmount} {invoiceData.receiverCurrency}</span>
@@ -828,7 +913,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                     </div>
                     <div className="flex justify-between border-t pt-2">
                       <span>Transaction Fee:</span>
-                      <span className="font-semibold">{invoiceData.feeAmount.toFixed(2)} {invoiceData.feeCurrency}</span>
+                      <span className="font-semibold">{getCurrencySymbol(invoiceData.feeCurrency)}{invoiceData.feeAmount.toFixed(2)} {invoiceData.feeCurrency}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Payment Methods:</span>
@@ -922,7 +1007,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                         Invoice Preview
                       </h3>
                       <div className="text-2xl font-bold text-blue-700 mb-2">
-                        {invoiceData.senderAmount} {invoiceData.senderCurrency} → {invoiceData.receiverAmount} {invoiceData.receiverCurrency}
+                        {getCurrencySymbol(invoiceData.senderCurrency)}{invoiceData.senderAmount} {invoiceData.senderCurrency} → {getCurrencySymbol(invoiceData.receiverCurrency)}{invoiceData.receiverAmount} {invoiceData.receiverCurrency}
                       </div>
                       <p className="text-blue-600 font-mono">
                         Exchange Rate: 1 {invoiceData.senderCurrency} = {invoiceData.exchangeRate.toFixed(4)} {invoiceData.receiverCurrency}
@@ -962,7 +1047,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                           </div>
                           <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
                             <strong className="text-blue-700">Sending Amount:</strong> 
-                            <span className="font-bold text-blue-800">{invoiceData.senderAmount} {invoiceData.senderCurrency}</span>
+                            <span className="font-bold text-blue-800">{getCurrencySymbol(invoiceData.senderCurrency)}{invoiceData.senderAmount} {invoiceData.senderCurrency}</span>
                           </div>
                         </div>
                       </div>
@@ -995,7 +1080,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                           </div>
                           <div className="flex justify-between border-t border-green-200 pt-2 mt-2">
                             <strong className="text-green-700">Receiving Amount:</strong> 
-                            <span className="font-bold text-green-800">{invoiceData.receiverAmount} {invoiceData.receiverCurrency}</span>
+                            <span className="font-bold text-green-800">{getCurrencySymbol(invoiceData.receiverCurrency)}{invoiceData.receiverAmount} {invoiceData.receiverCurrency}</span>
                           </div>
                         </div>
                       </div>
@@ -1007,7 +1092,7 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                       <div className="grid grid-cols-2 gap-6 text-sm">
                         <div className="space-y-2">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Original Rate:</span>
+                          <span className="text-gray-600">Base Rate:</span>
                             <span className="font-mono">{(invoiceData.exchangeRate / (1 - invoiceData.feeRate / 100)).toFixed(4)}</span>
                           </div>
                           <div className="flex justify-between">
@@ -1016,13 +1101,13 @@ export default function CreateInvoice({ onBack, onComplete, selectedCountry }: C
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Adjusted Rate:</span>
-                            <span className="font-mono">{invoiceData.exchangeRate.toFixed(4)}</span>
+                          <span className="font-mono">{(invoiceData.exchangeRate * (1 - invoiceData.feeRate / 100)).toFixed(4)}</span>
                           </div>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Fee Amount:</span>
-                            <span className="font-semibold">{invoiceData.feeAmount.toFixed(2)} {invoiceData.feeCurrency}</span>
+                            <span className="font-semibold">{getCurrencySymbol(invoiceData.feeCurrency)}{invoiceData.feeAmount.toFixed(2)} {invoiceData.feeCurrency}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Fee Paid By:</span>
