@@ -141,7 +141,6 @@ const AutoConversionWidget: React.FC<AutoConversionWidgetProps> = ({
     { id: '2', fromCurrency: 'USD', toCurrency: 'NGN', amount: 500, isVisible: true },
     { id: '3', fromCurrency: 'USD', toCurrency: 'KES', amount: 1000, isVisible: true }
   ]);
-  const [isAutoRefresh, setIsAutoRefresh] = useState(true);
 
   // Get currency flag
   const getCurrencyFlag = (currency: string) => {
@@ -199,16 +198,7 @@ const AutoConversionWidget: React.FC<AutoConversionWidgetProps> = ({
     return { change: 0, changePercent: 0, lastUpdated: new Date().toISOString() };
   };
 
-  // Auto refresh rates
-  useEffect(() => {
-    if (!isAutoRefresh) return;
-
-    const interval = setInterval(() => {
-      onRefreshRates();
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [isAutoRefresh, onRefreshRates]);
+  // Auto refresh rates - removed auto conversion functionality
 
   // Update conversion pair amount
   const updatePairAmount = (id: string, amount: number) => {
@@ -242,28 +232,18 @@ const AutoConversionWidget: React.FC<AutoConversionWidgetProps> = ({
             Auto Conversions
           </CardTitle>
           
-          <div className="flex items-center gap-2">
-            <Badge 
-              variant={isAutoRefresh ? "default" : "outline"} 
-              className="text-xs cursor-pointer"
-              onClick={() => setIsAutoRefresh(!isAutoRefresh)}
-            >
-              {isAutoRefresh ? 'Auto' : 'Manual'}
-            </Badge>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRefreshRates}
-              disabled={isRefreshing}
-              className="h-7 w-7 p-0"
-            >
-              <ArrowsClockwise 
-                className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} 
-                weight="bold" 
-              />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefreshRates}
+            disabled={isRefreshing}
+            className="h-7 w-7 p-0"
+          >
+            <ArrowsClockwise
+              className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`}
+              weight="bold"
+            />
+          </Button>
         </div>
       </CardHeader>
       
@@ -399,7 +379,7 @@ const AutoConversionWidget: React.FC<AutoConversionWidgetProps> = ({
         </Button>
         
         <div className="text-center text-xs text-muted-foreground pt-2 border-t">
-          {isAutoRefresh ? 'Auto-refreshing every 30s' : 'Manual refresh mode'}
+          Manual refresh mode
         </div>
       </CardContent>
     </Card>

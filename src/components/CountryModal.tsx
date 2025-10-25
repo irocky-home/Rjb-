@@ -28,8 +28,8 @@ import {
   CaretRight,
   CaretLeft,
   Printer
-} from "@phosphor-icons/react";
-import { toast } from "sonner";
+} from '@phosphor-icons/react';
+import { toast } from "sonner";import { useKV } from '@/hooks/useKVWithFallback';
 
 const COUNTRY_DATA = [
   { code: 'GH', name: 'Ghana', currency: 'GHS', phoneCode: '+233', flag: '🇬🇭', symbol: '₵' },
@@ -180,6 +180,19 @@ interface CountryModalProps {
   onTransactionUpdated?: (transaction: Transaction) => void;
 }
 
+interface UserProfile {
+  displayName: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  role: string;
+  joinDate: string;
+  lastActive: string;
+  profileImage?: string | null;
+}
+
+
 interface TransactionFormData {
   fullName: string;
   email: string;
@@ -216,18 +229,32 @@ const CountryModal: React.FC<CountryModalProps> = ({
     currency: country.currency,
     phoneNumber: ''
   });
-  const [senderCurrency, setSenderCurrency] = useState<string>('USD');
-  const [receiverCurrency, setReceiverCurrency] = useState<string>('GHS'); // Default to GHS for Ghana
+
+  const [userProfile] = useKV<UserProfile>('user-profile');
+
+  const defaultSenderCurrency = React.useMemo(() => {
+    if (userProfile?.location) {
+      const countryName = userProfile.location.split(',')[1]?.trim();
+      if (countryName) {
+        const country = COUNTRY_DATA.find(c => c.name.toLowerCase() === countryName.toLowerCase());
+        return country?.currency || 'GHS'; // Fallback to GHS
+      }
+    }
+    return 'GHS'; // Default fallback
+  }, [userProfile]);
+
+  const [senderCurrency, setSenderCurrency] = useState<string>(defaultSenderCurrency);
+  const [receiverCurrency, setReceiverCurrency] = useState<string>('USD');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   
   // Sync sender and receiver currencies when transaction type changes
   useEffect(() => {
     if (transactionType === 'send') {
-      setSenderCurrency('USD');
-      setReceiverCurrency('GHS'); // Default to GHS for Ghana
+      setSenderCurrency(defaultSenderCurrency);
+      setReceiverCurrency(country.currency); // Dynamic based on selected country
     } else {
-      setSenderCurrency('GHS'); // Default to GHS for Ghana
-      setReceiverCurrency('USD');
+      setSenderCurrency(defaultSenderCurrency);
+      setReceiverCurrency(country.currency); // Dynamic based on selected country
     }
     // Reset fee and D2D toggle when transaction type changes
     setCustomFee(null);
@@ -235,9 +262,9 @@ const CountryModal: React.FC<CountryModalProps> = ({
     // Update formData currency to use sender's currency for send transactions
     setFormData(prev => ({
       ...prev,
-      currency: transactionType === 'send' ? 'USD' : 'USD' // For receive, also use USD as receiver currency
+      currency: transactionType === 'send' ? defaultSenderCurrency : country.currency
     }));
-  }, [transactionType]);
+  }, [transactionType, defaultSenderCurrency, country.currency]);
 
   // Check if transaction is Dollar to Dollar
   useEffect(() => {
@@ -516,11 +543,12 @@ const CountryModal: React.FC<CountryModalProps> = ({
     }
   };
 
-  const calculateReceivingAmount = (transaction: Transaction): number => {
-    const effectiveRate = customExchangeRate !== null 
-      ? customExchangeRate 
-      : getRateForPair(transaction.fromCurrency, transaction.toCurrency);
-      
+  const calculateReceivingAmount = (transaction: Transaction, selectedCurrency?: string): number => {
+    const targetCurrency = selectedCurrency || transaction.toCurrency;
+    const effectiveRate = customExchangeRate !== null
+      ? customExchangeRate
+      : getRateForPair(transaction.fromCurrency, targetCurrency);
+
     const amountToConvert = transaction.amount - transaction.fee; // Deduct fee before conversion
     return amountToConvert * effectiveRate; // Use the direct rate
   };
@@ -755,7 +783,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                       <div>
                         <span className="text-muted-foreground">Receiving:</span>
                         <div className="font-semibold font-mono text-green-600">
-                  {getCurrencySymbol(transaction.toCurrency)}{calculateReceivingAmount(transaction).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {transaction.toCurrency}
+                  {getCurrencySymbol(transaction.toCurrency)}{calculateReceivingAmount(transaction, receiverInfo.currency).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {transaction.toCurrency}
                         </div>
                       </div>
                       <div>
@@ -856,7 +884,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                 <span className="text-muted-foreground">Receiving Amount:</span>
                 <div className="font-mono text-green-600 font-bold">
                   {(() => {
-                    const receivingAmount = calculateReceivingAmount(selectedTransaction);
+                    const receivingAmount = calculateReceivingAmount(selectedTransaction, receiverInfo.currency);
                     return receivingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                   })()} {receiverInfo.currency || selectedTransaction.toCurrency}
                 </div>
@@ -873,7 +901,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   }}
                   step="0.0001"
                   className="font-mono h-10 mt-1"
-                  readOnly={isSecuring}
+                  readOnly={true}
                 />
               </div>
             </div>
@@ -1108,102 +1136,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              // Show PDF preview for sender
-              const pdfModal = document.createElement('div');
-              pdfModal.innerHTML = `
-                <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                    <div class="flex items-center justify-between p-6 border-b">
-                      <h2 class="text-xl font-semibold">Sender Receipt Preview</h2>
-                      <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </div>
-                    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                      <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-2xl shadow-inner border border-gray-200" style="font-family: system-ui, -apple-system, sans-serif; min-height: 600px;">
-                        <!-- Header -->
-                        <div class="text-center mb-8">
-                          <div class="flex items-center justify-center gap-3 mb-4">
-                            <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                              <span class="text-white text-xl font-bold">✓</span>
-                            </div>
-                            <div>
-                              <h1 class="text-2xl font-bold text-gray-800">RJB TRANZ</h1>
-                              <p class="text-sm text-gray-600">Professional Currency Exchange</p>
-                            </div>
-                          </div>
-                          <div class="w-full h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
-                        </div>
-
-                        <!-- Main Content -->
-                        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-6">
-                          <div class="text-center mb-8">
-                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
-                              You just sent money to ${country.name} ${country.flag}
-                            </h2>
-                            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                              <p class="text-blue-800 font-semibold">
-                                Exchange Rate: 1 ${selectedTransaction?.fromCurrency || 'USD'} = ${(() => {
-                                  const fromCurrency = selectedTransaction?.fromCurrency || 'USD';
-                                  const toCurrency = receiverInfo.currency || selectedTransaction?.toCurrency || country.currency;
-                                  const rate = getRateForPair(fromCurrency, toCurrency);
-                                  return (rate * 1.00).toFixed(4); // Adding 5% markup like in the original code
-                                })()} ${receiverInfo.currency || selectedTransaction?.toCurrency || country.currency}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div class="flex justify-center mb-8">
-                            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-                              <div class="text-sm text-gray-600 mb-2">Amount Sent</div>
-                              <div class="text-2xl font-bold text-gray-800">${getCurrencySymbol(selectedTransaction?.fromCurrency || 'USD')}
-                                $${selectedTransaction?.amount?.toFixed(2) || '0.00'} ${selectedTransaction?.fromCurrency || 'USD'}
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- Receiving Amount -->
-                          <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200 text-center mb-6">
-                            <div class="text-lg font-semibold text-gray-800 mb-2">Amount to Receive</div>
-                            <div class="text-3xl font-bold text-green-600">${getCurrencySymbol(receiverInfo.currency || selectedTransaction?.toCurrency || country.currency)}
-                              ${receiverInfo.currency || selectedTransaction?.toCurrency || country.currency} ${calculateReceivingAmount(selectedTransaction).toFixed(2)}
-                            </div>
-                          </div>
-
-                          <!-- Sender Info -->
-                          <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 mb-6">
-                            <div class="flex justify-between items-center">
-                              <span class="text-lg font-semibold text-gray-800">Sender:</span>
-                              <span class="text-xl font-bold text-blue-600">
-                                ${selectedTransaction?.clientName || 'N/A'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- RJB Code -->
-                          <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200 text-center">
-                            <div class="text-lg font-semibold text-gray-800 mb-2">Transaction Code</div>
-                            <div class="text-3xl font-bold text-green-600 font-mono">
-                              ${selectedTransaction?.uniqueCode || 'RJB00000000'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Footer -->
-                        <div class="text-center text-sm text-gray-500">
-                          <p>Thank you for choosing RJB TRANZ</p>
-                          <p class="mt-1">Generated on ${new Date().toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `;
-              document.body.appendChild(pdfModal);
-            }}
+              onClick={() => {}}
             className="h-10 w-10 p-0 hover:bg-blue-50 hover:border-blue-200 border border-blue-100 transition-all duration-300"
             title="Preview Sender Receipt"
           >
@@ -1216,102 +1149,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                // Show PDF preview for sender
-                const pdfModal = document.createElement('div');
-                pdfModal.innerHTML = `
-                  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                      <div class="flex items-center justify-between p-6 border-b">
-                        <h2 class="text-xl font-semibold">Sender Receipt Preview</h2>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-2xl shadow-inner border border-gray-200" style="font-family: system-ui, -apple-system, sans-serif; min-height: 600px;">
-                          <!-- Header -->
-                          <div class="text-center mb-8">
-                            <div class="flex items-center justify-center gap-3 mb-4">
-                              <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                                <span class="text-white text-xl font-bold">✓</span>
-                              </div>
-                              <div>
-                                <h1 class="text-2xl font-bold text-gray-800">RJB TRANZ</h1>
-                                <p class="text-sm text-gray-600">Professional Currency Exchange</p>
-                              </div>
-                            </div>
-                            <div class="w-full h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
-                          </div>
- 
-                          <!-- Main Content -->
-                          <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-6">
-                            <div class="text-center mb-8">
-                              <h2 class="text-2xl font-bold text-gray-800 mb-4">
-                                You just sent money to ${country.name} ${country.flag}
-                              </h2>
-                              <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                <p class="text-blue-800 font-semibold">
-                                  Exchange Rate: 1 ${selectedTransaction?.fromCurrency || 'USD'} = ${(() => {
-                                    const fromCurrency = selectedTransaction?.fromCurrency || 'USD';
-                                    const toCurrency = receiverInfo.currency || selectedTransaction?.toCurrency || country.currency;
-                                    const rate = getRateForPair(fromCurrency, toCurrency);
-                                    return (rate).toFixed(4);
-                                  })()} ${receiverInfo.currency || selectedTransaction?.toCurrency || country.currency}
-                                </p>
-                              </div>
-                            </div>
- 
-                            <div class="flex justify-center mb-8">
-                              <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-                                <div class="text-sm text-gray-600 mb-2">Amount Sent</div>
-                              <div class="text-2xl font-bold text-gray-800">${getCurrencySymbol(selectedTransaction?.fromCurrency || 'USD')}
-                                  $${selectedTransaction?.amount?.toFixed(2) || '0.00'} ${selectedTransaction?.fromCurrency || 'USD'}
-                                </div>
-                              </div>
-                            </div>
- 
-                            <!-- Receiving Amount -->
-                            <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200 text-center mb-6">
-                              <div class="text-lg font-semibold text-gray-800 mb-2">Amount to Receive</div>
-                            <div class="text-3xl font-bold text-green-600">${getCurrencySymbol(receiverInfo.currency || selectedTransaction?.toCurrency || country.currency)}
-                                ${receiverInfo.currency || selectedTransaction?.toCurrency || country.currency} ${calculateReceivingAmount(selectedTransaction).toFixed(2)}
-                              </div>
-                            </div>
- 
-                            <!-- Sender Info -->
-                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 mb-6">
-                              <div class="flex justify-between items-center">
-                                <span class="text-lg font-semibold text-gray-800">Sender:</span>
-                                <span class="text-xl font-bold text-blue-600">
-                                  ${selectedTransaction?.clientName || 'N/A'}
-                                </span>
-                              </div>
-                            </div>
- 
-                            <!-- RJB Code -->
-                            <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200 text-center">
-                              <div class="text-lg font-semibold text-gray-800 mb-2">Transaction Code</div>
-                              <div class="text-3xl font-bold text-green-600 font-mono">
-                                ${selectedTransaction?.uniqueCode || 'RJB00000000'}
-                              </div>
-                            </div>
-                          </div>
- 
-                          <!-- Footer -->
-                          <div class="text-center text-sm text-gray-500">
-                            <p>Thank you for choosing <strong className="font-bold">RJB TRANZ</strong></p>
-                            <p class="mt-1">Generated on ${new Date().toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `;
-                document.body.appendChild(pdfModal);
-              }}
+              onClick={() => {}}
               className="h-10 w-10 p-0 hover:bg-blue-50 hover:border-blue-200 border border-blue-100 transition-all duration-300"
               title="Preview Sender Receipt"
             >
@@ -1335,162 +1173,62 @@ const CountryModal: React.FC<CountryModalProps> = ({
             id="receipt-preview"
             className="bg-white border-2 border-orange-200 rounded-lg p-6 shadow-lg max-w-2xl mx-auto"
             style={{
-              background: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
+              backgroundImage: `url(/src/assets/rjb-background.jpg)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              color: '#000',
               border: '3px solid #ea580c'
             }}
           >
             {/* Company Header */}
-            <div className="text-center mb-6 border-b-2 border-orange-300 pb-4">
+            <div className="text-center mb-6 border-b-2 border-gray-300 pb-4">
               <div className="flex items-center justify-center gap-4 mb-4">
-                <img
-                  src="https://i.ibb.co/nsymNz8D/OIP.webp"
-                  alt="RJB TRANZ Logo"
-                  className="h-16 w-16 object-contain"
-                />
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent font-montserrat">
-                    <strong className="font-bold">RJB TRANZ</strong>
-                  </h1>
-                  <p className="text-orange-700 font-medium">Currency Exchange Management</p>
-                </div>
-              </div>
-              <div className="text-sm text-orange-600">
-                <p>Professional Currency Exchange Services</p>
-                <p>Accra, Ghana | +233-123-456-789 | admin@rjbtranz.com</p>
+                <h2 className="text-lg font-semibold text-white">Transaction Summary</h2>
               </div>
             </div>
 
             {/* Transaction Details */}
             <div className="space-y-4">
               {/* Transaction Header */}
-              <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-lg border border-orange-300">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-bold text-orange-800">Transaction Receipt</h3>
-                  <div className="text-right">
-                    <p className="text-sm text-orange-700">Transaction ID</p>
-                    <p className="font-mono font-bold text-orange-900">{selectedTransaction.formatId}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-orange-700">Date:</span>
-                    <span className="ml-2 font-medium">{new Date(selectedTransaction.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-orange-700">Time:</span>
-                    <span className="ml-2 font-medium">{new Date(selectedTransaction.createdAt).toLocaleTimeString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sender & Receiver Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Sender */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Sender Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-blue-700">Name:</span>
-                      <span className="ml-2 font-medium">{selectedTransaction.clientName}</span>
-                    </div>
-                    <div>
-                      <span className="text-blue-700">Email:</span>
-                      <span className="ml-2 font-medium">{selectedTransaction.clientEmail || 'Not provided'}</span>
-                    </div>
-                    <div>
-                      <span className="text-blue-700">Phone:</span>
-                      <span className="ml-2 font-medium">{selectedTransaction.phoneNumber}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Receiver */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                  <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Receiver Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-green-700">Name:</span>
-                      <span className="ml-2 font-medium">{receiverInfo.fullName}</span>
-                    </div>
-                    <div>
-                      <span className="text-green-700">Email:</span>
-                      <span className="ml-2 font-medium">{receiverInfo.email || 'Not provided'}</span>
-                    </div>
-                    <div>
-                      <span className="text-green-700">Phone:</span>
-                      <span className="ml-2 font-medium">{receiverInfo.phoneNumber || 'Not provided'}</span>
-                    </div>
-                    <div>
-                      <span className="text-green-700">Country:</span>
-                      <span className="ml-2 font-medium flex items-center gap-1">
-                        <span>{country.flag}</span>
-                        {country.name}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Amount Details */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-                <h4 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
-                  <CurrencyDollar className="h-4 w-4" />
-                  Transaction Details
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Amount Sent:</span>
-                      <span className="font-bold text-lg">${selectedTransaction.amount.toLocaleString()} {selectedTransaction.fromCurrency}</span>
-                    </div> {/* Use getCurrencySymbol here */}
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Exchange Rate:</span>
-                      <span className="font-mono font-medium">{(customExchangeRate !== null ? customExchangeRate : selectedTransaction.exchangeRate).toFixed(4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Transaction Fee:</span>
-                      <span className="font-medium">${selectedTransaction.fee.toFixed(2)}</span>
-                    </div> {/* Use getCurrencySymbol here */}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Amount to Receive:</span>
-                      <span className="font-bold text-lg text-green-600">
-                        {getCurrencySymbol(selectedTransaction.toCurrency)}{calculateReceivingAmount(selectedTransaction).toLocaleString()} {selectedTransaction.toCurrency}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Transaction Type:</span>
-                      <span className="capitalize font-medium">{selectedTransaction.transactionType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-amber-700">Status:</span>
-                      <Badge className={`${getStatusColor(selectedTransaction.status)} text-xs`}>
-                        {getStatusIcon(selectedTransaction.status)}
-                        <span className="ml-1 capitalize">{selectedTransaction.status}</span>
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg">
+                <p className="text-gray-800">
+                  Hi, <strong className="text-2xl">{selectedTransaction.clientName}</strong>, you just sent{' '}
+                  {selectedTransaction.amount.toFixed(2)} {selectedTransaction.fromCurrency} to {country.name}.
+                </p>
+                <br />
+                <p className="text-gray-800">
+                  <strong>Receiver gets:</strong>{' '}
+                  {receiverInfo.currency || selectedTransaction.toCurrency}{' '}
+                  {calculateReceivingAmount(
+                    selectedTransaction,
+                    receiverInfo.currency
+                  ).toFixed(2)}
+                </p>
+                <p className="text-gray-800">
+                  <strong>Exchange rate:</strong> 1{' '}
+                  {selectedTransaction.fromCurrency} ={' '}
+                  {getRateForPair(
+                    selectedTransaction.fromCurrency,
+                    receiverInfo.currency || selectedTransaction.toCurrency
+                  ).toFixed(4)}{' '}
+                  {receiverInfo.currency || selectedTransaction.toCurrency}
+                </p>
+                <p className="text-gray-800">
+                  <strong>Unique Code:</strong> {selectedTransaction.uniqueCode}
+                </p>
               </div>
 
               {/* Footer */}
-              <div className="text-center border-t border-orange-300 pt-4">
-                <p className="text-sm text-orange-600 mb-2">
+              <div className="text-center border-t border-gray-300 pt-4">
+                <p className="text-sm text-gray-700 mb-2">
                   Thank you for choosing <strong className="font-bold">RJB TRANZ</strong> for your currency exchange needs!
                 </p>
-                <p className="text-xs text-orange-500">
+                <p className="text-xs text-gray-500">
                   This receipt was generated on {new Date().toLocaleString()}
                 </p>
                 <div className="mt-4 flex justify-center">
-                  <div className="bg-orange-100 px-4 py-2 rounded-lg">
-                    <p className="text-xs text-orange-700 font-medium">
+                  <div className="bg-gray-200 px-4 py-2 rounded-lg">
+                    <p className="text-xs text-gray-800 font-medium">
                       Unique Code: {selectedTransaction.uniqueCode}
                     </p>
                   </div>
@@ -1501,35 +1239,19 @@ const CountryModal: React.FC<CountryModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-4 border-t">
-            {/* PDF and Print Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                onClick={generatePDF}
-                className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                <FloppyDisk className="h-5 w-5 mr-2" />
-                Save as PDF
-              </Button>
-
-              <Button
-                onClick={printReceipt}
-                variant="outline"
-                className="w-full h-12 border-2 border-orange-500 hover:bg-orange-50 hover:border-orange-600 transition-all duration-300 hover:scale-105"
-              >
-                <Printer className="h-5 w-5 mr-2" />
-                Print Receipt
-              </Button>
-            </div>
-
-            {/* Complete Transaction */}
+            {/* Print Receipt and Complete Transaction */}
             <Button
               onClick={async () => {
                 setIsSecuring(true);
                 try {
-                  toast.info("Processing transaction...");
+                  // Step 1: Show loading animation for 2 seconds
+                  toast.info("Printing receipt and completing transaction...");
                   await new Promise(resolve => setTimeout(resolve, 2000));
 
-                  // Update transaction status to completed
+                  // Step 2: Print the receipt
+                  printReceipt();
+
+                  // Step 3: Update transaction status to completed
                   const updatedTransaction = {
                     ...selectedTransaction,
                     status: 'completed' as const,
@@ -1544,9 +1266,14 @@ const CountryModal: React.FC<CountryModalProps> = ({
                     onTransactionCreated(updatedTransaction);
                   }
 
+                  // Step 4: Show success animation/screen
                   toast.success("Transaction completed successfully!");
                   toast.info(`Status updated: Pending → Completed`);
-                  onClose();
+
+                  // Close modal after success
+                  setTimeout(() => {
+                    onClose();
+                  }, 1000);
                 } catch (error) {
                   toast.error("Failed to complete transaction");
                 } finally {
@@ -1558,13 +1285,20 @@ const CountryModal: React.FC<CountryModalProps> = ({
             >
               {isSecuring ? (
                 <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                  <span>Processing Transaction...</span>
+                  <Printer className="h-6 w-6 animate-pulse" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm">Printing Receipt...</span>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      <span className="text-xs opacity-80">Completing Transaction</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-6 w-6" />
-                  <span>Complete Transaction</span>
+                  <Printer className="h-6 w-6" />
+                  <span>Print Receipt & Complete Transaction</span>
+                  <CheckCircle className="h-5 w-5" />
                 </div>
               )}
             </Button>
